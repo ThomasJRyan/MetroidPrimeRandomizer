@@ -2,12 +2,10 @@ import re
 from functools import reduce
 
 import gciso
+from MetroidFile import *
 
 def bytes_to_int(bytes):
-    # try:
     return int(bytes.hex(), 16)
-    # except:
-    #     import pdb; pdb.set_trace()
 
 def bytes_to_array(bytes, size=4):
     return [bytes[i:i+size] for i in range(0, len(bytes), size)]
@@ -87,9 +85,13 @@ class SCLY():
         # print(len(self.layer_data))
         self.scly_layers = [SCLY_Layer(data) for data in break_up_bytes(self.layer_data, self.layer_sizes)]
 
-class Locations():
-    def __init__(self):
-        pass
+class Location():
+    def __init__(self, offset):
+        self.offset = offset
+
+Locations = {
+
+}
 
 def get_objects_of_type(scly_list, obj_type):
     obj_list = list()
@@ -105,16 +107,34 @@ def get_objects_of_type(scly_list, obj_type):
 if __name__ == '__main__':
     scly = list()
 
-    iso = gciso.IsoFile('./Metroid/MP_Editable.iso')
+    iso = MetroidFile('./Metroid/MP_Editable.iso')
 
-    metroid3 = iso.readFile(b'Metroid3.pak', offset=0)
+    iso.seekFile(b'Metroid4.pak')
+    clean_data = iso.readBytes(20)
+    clean_data = b'\x00\x03\x00\x05\x00\x00\x00\x00\x00\x00\x00\x01MLVL9\xf2\xde('
+    print(clean_data)
 
-    pattern = re.compile(b'SCLY.{12}')
+    iso.seekFile(b'Metroid4.pak')
+    data = b'\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF'
+    iso.writeBytes(data)
 
-    scly = list()
+    iso.seekFile(b'Metroid4.pak')
+    print(iso.readBytes(20))
 
-    for m in pattern.finditer(metroid3):
-        scly.append(SCLY(metroid3, m.span()[0]))
+    iso.seekFile(b'Metroid4.pak')
+    iso.writeBytes(clean_data)
+
+    iso.seekFile(b'Metroid4.pak')
+    print(iso.readBytes(20))
+
+    # metroid3 = iso.readFile(b'Metroid3.pak', offset=0)
+
+    # pattern = re.compile(b'SCLY.{12}')
+
+    # scly = list()
+
+    # for m in pattern.finditer(metroid3):
+    #     scly.append(SCLY(metroid3, m.span()[0]))
 
     # for fil in iso.listDir(b'/'):
     #     if b'.pak' not in fil:
@@ -129,4 +149,4 @@ if __name__ == '__main__':
     #         # print(m.span()[0], m.group())
     #         # import pdb; pdb.set_trace()
 
-    obj_list = get_objects_of_type(scly, 17)
+    # obj_list = get_objects_of_type(scly, 17)
